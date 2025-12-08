@@ -45,7 +45,7 @@ INSTALLED_APPS = [
 
 
     # apps
-    'users', 'products', 'seller', 'cart', 'orders', 'payments', 'reviews', 'discounts', 'wishlist', 'staff', 'support',
+    # 'users', 'products', 'seller', 'cart', 'orders', 'payments', 'reviews', 'discounts', 'wishlist', 'staff', 'support',
 ]
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -92,7 +92,7 @@ DATABASES = {
         'USER': 'postgres',
         'PASSWORD': '1234',
         'HOST': 'localhost',
-        'PORT': '5432',
+        'PORT': '5433',
     }
 }
 
@@ -131,7 +131,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
-
+# Media
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
