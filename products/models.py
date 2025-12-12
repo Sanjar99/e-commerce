@@ -123,3 +123,14 @@ class ProductModeration(models.Model):
     reason = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+
+class ProductAttribute(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='attributes')
+    key = models.CharField(max_length=100)   # e.g. "RAM", "Material"
+    value = models.CharField(max_length=255) # e.g. "8GB", "Cotton"
+
+
+class SearchKeyword(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='keywords')
+    keyword = models.CharField(max_length=100)
