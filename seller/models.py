@@ -2,6 +2,9 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.utils.text import slugify
 
+from staff.models import StaffUser
+
+
 # -------------------------
 #   SELLER
 # -------------------------
@@ -53,3 +56,44 @@ class SellerPayout(models.Model):
     def __str__(self):
         return f"Payout {self.id} - {self.seller.shop_name} — {self.amount} — {self.status}"
 
+
+class SellerVerification(models.Model):
+    PENDING = 'Pending'
+    APPROVED = 'Approved'
+    REJECTED = 'Rejected'
+    STATUS_CHOICES = [
+        (PENDING, 'Pending'),
+        (APPROVED, 'Approved'),
+        (REJECTED, 'Rejected'),
+    ]
+    seller = models.ForeignKey(Seller, on_delete=models.CASCADE)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=PENDING)
+    staff = models.ForeignKey(StaffUser, on_delete=models.SET_NULL, null=True, blank=True)
+    document = models.FileField(upload_to='seller_documents/')
+    reason = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+# -------------------------
+# Seller Payout Approval
+# -------------------------
+class SellerPayout(models.Model):
+    PENDING = 'Pending'
+    APPROVED = 'Approved'
+    REJECTED = 'Rejected'
+    PAID = 'Paid'
+    STATUS_CHOICES = [
+        (PENDING, 'Pending'),
+        (APPROVED, 'Approved'),
+        (REJECTED, 'Rejected'),
+        (PAID, 'Paid'),
+    ]
+    seller = models.ForeignKey(Seller, on_delete=models.CASCADE)
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=PENDING)
+    staff = models.ForeignKey(StaffUser, on_delete=models.SET_NULL, null=True, blank=True)
+    requested_at = models.DateTimeField(auto_now_add=True)
+    processed_at = models.DateTimeField(blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.seller.shop_name} - {self.status}"

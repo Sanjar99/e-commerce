@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from django.utils.text import slugify
 
 from seller.models import Seller
+from staff.models import StaffUser
 
 
 # -------------------------
@@ -100,3 +101,25 @@ class SellerProductVariantPrice(models.Model):
 
     def __str__(self):
         return f"{self.seller_product} - {self.variant.value}"
+
+
+# -------------------------
+# Product Moderation Queue
+# -------------------------
+class ProductModeration(models.Model):
+    PENDING = 'Pending'
+    APPROVED = 'Approved'
+    REJECTED = 'Rejected'
+
+    STATUS_CHOICES = [
+        (PENDING, 'Pending'),
+        (APPROVED, 'Approved'),
+        (REJECTED, 'Rejected'),
+    ]
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    seller = models.ForeignKey(Seller, on_delete=models.CASCADE)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=PENDING)
+    staff = models.ForeignKey(StaffUser, on_delete=models.SET_NULL, null=True, blank=True)
+    reason = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
