@@ -1,13 +1,14 @@
 from django.db import models
 from django.contrib.auth.models import User
 
-
 from products.models import SellerProduct
 from seller.models import Seller
 
 
 # -------------------------
-#   ADDRESS
+# Address
+#       Vazifasi: Foydalanuvchining yetkazib berish manzillarini saqlaydi.
+#       Nima uchun kerak: Har bir user bir yoki bir nechta manzilga ega bo‘lishi mumkin; is_default orqali asosiy manzilni belgilash mumkin.
 # -------------------------
 class Address(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -22,9 +23,11 @@ class Address(models.Model):
 
 
 # -------------------------
-#   ORDER
+# Order
+#       Vazifasi: Foydalanuvchi tomonidan berilgan buyurtmani saqlaydi.
+#       Nima uchun kerak:Orderning umumiy ma’lumotlarini (total_price, total_items, status, payment_method) boshqarish uchun.
+#       Qiziq nuqta: Har order bir nechta sellerni o‘z ichiga olishi mumkin → distributsiya uchun OrderSellerGroup.
 # -------------------------
-
 class Order(models.Model):
     PENDING = "Pending"
     PROCESSING = "Processing"
@@ -54,7 +57,13 @@ class Order(models.Model):
 
     def __str__(self):
         return f"Order {self.id} - order number - {self.order_number}"
-    
+
+
+# -------------------------
+# OrderSellerGroup
+#       Vazifasi: Har orderdagi har bir seller uchun alohida guruh yaratadi.
+#       Nima uchun kerak: Marketplace’da 1 order ichida bir nechta seller bo‘lishi mumkin; har seller uchun shipment va statusni alohida kuzatish uchun.
+# -------------------------
 class OrderSellerGroup(models.Model):
     AWAITING = 'Awaiting'
     SHIPPED = 'Shipped'
@@ -72,7 +81,12 @@ class OrderSellerGroup(models.Model):
 
     def __str__(self):
         return f"{self.order.order_number} - {self.seller.shop_name}"
-
+# -------------------------
+# OrderItem
+#       Vazifasi: OrderSellerGroup’dagi har bir productni saqlaydi.
+#       Nima uchun kerak: Qaysi sellerdan qaysi product buyurtma qilinganini, quantity va price bilan saqlash uchun.
+#       Qiziq nuqta: seller_group orqali har sellerning buyurtma items’ini ajratib olish mumkin.
+# -------------------------
 class OrderItem(models.Model):
     seller_group = models.ForeignKey(OrderSellerGroup, on_delete=models.CASCADE, related_name='items')
     seller_product = models.ForeignKey(SellerProduct, on_delete=models.CASCADE)

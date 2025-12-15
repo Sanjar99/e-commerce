@@ -45,7 +45,7 @@ INSTALLED_APPS = [
 
 
     # apps
-    # 'users', 'products', 'seller', 'cart', 'orders', 'payments', 'reviews', 'discounts', 'wishlist', 'staff', 'support',
+    # 'accounts', 'products', 'seller', 'cart', 'orders', 'payments', 'reviews', 'discounts', 'wishlist', 'staff', 'support',
 ]
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -58,6 +58,8 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'config.urls'
+
+AUTH_USER_MODEL = 'accounts.User'
 
 TEMPLATES = [
     {

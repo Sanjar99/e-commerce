@@ -2,6 +2,12 @@ from django.db import models
 
 from orders.models import Order
 
+# -------------------------
+# Payment
+#       Vazifasi:  Buyurtmaning to‘lov holatini saqlaydi.
+#       Nima uchun kerak:Order uchun to‘lov qilinganmi yoki yo‘qmi – shuni boshqarish uchun.
+#           Payment gateway (Click, Payme, Stripe va h.k.) bilan integratsiyada real to‘lov ma’lumotlarini saqlash uchun.
+# -------------------------
 
 class Payment(models.Model):
     STATUS_CHOICES = [

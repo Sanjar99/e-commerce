@@ -1,9 +1,12 @@
 from django.db import models
 
 # -------------------------
-#   COUPON
+# Coupon
+#       Vazifasi: Buyurtmaga chegirma berish uchun ishlatiladigan promo kodlarni saqlaydi.
+#       Nima uchun kerak: Marketing kampaniyalar
+#               Aksiya va chegirmalar
+#               Userlarni xaridga jalb qilish
 # -------------------------
-
 class Coupon(models.Model):
     PERCENT = 'Percent'
     FIXED = 'Fixed Amount'

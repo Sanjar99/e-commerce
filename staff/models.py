@@ -4,9 +4,10 @@ from django.contrib.auth.models import User
 from products.models import Category
 from seller.models import Seller
 
-
 # -------------------------
-# Staff Roles (Amazon style)
+# StaffRole
+#       Vazifasi: Platformadagi admin/staff rollarini belgilaydi.
+#       Nima uchun kerak: Kim nima ish qila olishini ajratish (permission logic).
 # -------------------------
 class StaffRole(models.Model):
     # Asosiy rollar
@@ -36,9 +37,11 @@ class StaffRole(models.Model):
     def __str__(self):
         return self.get_name_display()
 
-
 # -------------------------
-# Staff Users
+# StaffUser
+#       Vazifasi: Platforma xodimlarini saqlaydi.
+#       Nima uchun kerak: Oddiy Userni staff sifatida ajratish
+#           Qaysi rolga ega ekanini va nimani boshqarishini bilish
 # -------------------------
 class StaffUser(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -51,9 +54,10 @@ class StaffUser(models.Model):
     def __str__(self):
         return f"{self.user.username} - {self.role.get_name_display()}"
 
-
 # -------------------------
-# Moderation Log
+# ModerationLog
+#       Vazifasi:Staff qilgan har bir muhim harakatni log qilish.
+#       Nima uchun kerak: Audit (kim nima qildi?), Security, Xatoni tekshirish (debug)
 # -------------------------
 class ModerationLog(models.Model):
     # -------------------------
@@ -103,12 +107,15 @@ class ModerationLog(models.Model):
 
 # -------------------------
 # SupportTicket
+#       Vazifasi: User yoki sellerlardan kelgan support murojaatlarini saqlaydi.
+#       Nima uchun kerak: Customer support tizimi
+#               Order bilan bog‘liq muammolarni kuzatish
 # -------------------------
-
 class SupportTicket(models.Model):
     OPEN = 'Open'
     IN_PROGRESS = 'In Progress'
     CLOSED = 'Closed'
+
     STATUS_CHOICES = [
         (OPEN, 'Open'),
         (IN_PROGRESS, 'In Progress'),

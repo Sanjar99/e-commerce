@@ -1,5 +1,4 @@
 from django.db import models
-from django.contrib.auth.models import User
 from django.utils.text import slugify
 
 from seller.models import Seller
@@ -7,7 +6,10 @@ from staff.models import StaffUser
 
 
 # -------------------------
-#   CATEGORY
+#   Category
+#       Vazifasi: Productlarni turkumlarga ajratadi (category/subcategory).
+#       Nima uchun kerak: Filtrlash, navigatsiya va katalog tizimi uchun.
+#       Qiziq nuqta: parent orqali o‘z-o‘ziga bog‘lanadi → subcategory yaratish mumkin.
 # -------------------------
 
 class Category(models.Model):
@@ -27,7 +29,10 @@ class Category(models.Model):
         return self.name
 
 # -------------------------
-#   PRODUCT
+#   Product
+#       Vazifasi: Marketplace’dagi asosiy product item.
+#       Nima uchun kerak: Har bir seller productni shu asosiy itemga bog‘laydi;
+#       umumiy ma’lumotlar (name, description, brand, main_image) shu yerda saqlanadi.
 # -------------------------
 
 class Product(models.Model):
@@ -52,6 +57,12 @@ class Product(models.Model):
     def __str__(self):
         return self.name
 
+# -------------------------
+#   ProductImage
+#       Vazifasi:Productga bir nechta rasm qo‘shish.
+#       Nima uchun kerak: Multiple image support; is_main orqali asosiy rasmni belgilash mumkin.
+# -------------------------
+
 class ProductImage(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='images')
     image = models.ImageField(upload_to='product_images/')
@@ -60,7 +71,11 @@ class ProductImage(models.Model):
     def __str__(self):
         return f"{self.product.name} image"
 
-
+# -------------------------
+#   SellerProduct
+#       Vazifasi: Har sellerning o‘z narxi, stock va SKU bilan producti.
+#       Nima uchun kerak: Marketplace’da bir productni bir nechta seller sotishi mumkin; har seller uchun alohida narx va stock.
+# -------------------------
 class SellerProduct(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='seller_products')
     seller = models.ForeignKey(Seller, on_delete=models.CASCADE, related_name='products')
@@ -74,7 +89,11 @@ class SellerProduct(models.Model):
     def __str__(self):
         return f"{self.product.name} - {self.seller.shop_name}"
 
-
+# -------------------------
+#   ProductVariant
+#       Vazifasi: Product variantlarini (Color, Size, Storage) saqlaydi.
+#       Nima uchun kerak: Masalan, XL, L yoki 256GB variantlarini boshqarish uchun.
+# -------------------------
 class ProductVariant(models.Model):
     COLOR = "Color"
     SIZE = "Size"
@@ -92,7 +111,11 @@ class ProductVariant(models.Model):
     def __str__(self):
         return f"{self.product.title} - {self.type}: {self.value}"
 
-
+# -------------------------
+#   SellerProductVariantPrice
+#       Vazifasi: Har seller variant narxi va stock’ini saqlaydi.
+#       Nima uchun kerak: Amazon kabi: bir sellerda XL variant qimmat, boshqasida arzon bo‘lishi mumkin.
+# -------------------------
 class SellerProductVariantPrice(models.Model):
     seller_product = models.ForeignKey(SellerProduct, on_delete=models.CASCADE, related_name='variant_prices')
     variant = models.ForeignKey(ProductVariant, on_delete=models.CASCADE)
@@ -102,9 +125,19 @@ class SellerProductVariantPrice(models.Model):
     def __str__(self):
         return f"{self.seller_product} - {self.variant.value}"
 
-
 # -------------------------
-# Product Moderation Queue
+# ProductAttribute
+#       Vazifasi: Productning statik xususiyatlarini saqlaydi (RAM, Material, Size).
+#       Nima uchun kerak: Dynamic specs; filtrlar va product info uchun.
+# -------------------------
+class ProductAttribute(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='attributes')
+    key = models.CharField(max_length=100)   # e.g. "RAM", "Material"
+    value = models.CharField(max_length=255) # e.g. "8GB", "Cotton"
+# -------------------------
+# ProductModeration
+#       Vazifasi: Productni seller joylagandan keyin admin/ staff tomonidan tasdiqlash jarayoni.
+#       Nima uchun kerak: Marketplace’da content moderation; status orqali product qabul qilingan, rad qilingan yoki pending ekanini kuzatadi.
 # -------------------------
 class ProductModeration(models.Model):
     PENDING = 'Pending'
@@ -124,13 +157,11 @@ class ProductModeration(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-
-class ProductAttribute(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='attributes')
-    key = models.CharField(max_length=100)   # e.g. "RAM", "Material"
-    value = models.CharField(max_length=255) # e.g. "8GB", "Cotton"
-
-
+# -------------------------
+# SearchKeyword Queue
+#       Vazifasi:Product uchun search keywords saqlaydi.
+#       Nima uchun kerak: SEO va search engine optimization, productni tez topish uchun.
+# -------------------------
 class SearchKeyword(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='keywords')
     keyword = models.CharField(max_length=100)

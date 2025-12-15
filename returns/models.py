@@ -1,13 +1,20 @@
 from django.db import models
 from order.models import OrderItem
 from django.contrib.auth.models import User
+
 from staff.models import StaffUser
 
+# -------------------------
+# ShippingProvider
+#       Vazifasi: Foydalanuvchining mahsulotni qaytarish (refund/return) so‘rovini saqlaydi.
+#       Nima uchun kerak: Order ichidagi bitta product (OrderItem) bo‘yicha qaytarish jarayonini boshqarish uchun.
+#               Admin/Staff tomonidan tekshirilib, tasdiqlash yoki rad etish uchun.
+# -------------------------
 class ReturnRequest(models.Model):
     PENDING = 'Pending'
     APPROVED = 'Approved'
     REJECTED = 'Rejected'
-    REFUNDED = 'Refunded',
+    REFUNDED = 'Refunded'
 
     STATUS_CHOICES = [
         (PENDING, 'Pending'),
