@@ -1,10 +1,8 @@
 from rest_framework import serializers
 from .models import (
-    Category, Product, ProductImage, SellerProduct, ProductVariant,
-    SellerProductVariantPrice, ProductAttribute, ProductModeration, SearchKeyword
+    Category, Product, ProductImage, ProductAttribute, SearchKeyword,
+    SellerProduct, ProductVariant, SellerProductVariantPrice, ProductModeration
 )
-from seller.models import Seller
-from staff.models import StaffUser
 
 # ------------------------------
 # Category Serializer
@@ -20,32 +18,6 @@ class CategorySerializer(serializers.ModelSerializer):
     def get_subcategories(self, obj):
         return CategorySerializer(obj.subcategories.all(), many=True).data
 
-# ------------------------------
-# Product Serializer
-# ------------------------------
-class ProductSerializer(serializers.ModelSerializer):
-    category = CategorySerializer(read_only=True)
-    images = serializers.SerializerMethodField(read_only=True)
-    attributes = serializers.SerializerMethodField(read_only=True)
-    keywords = serializers.SerializerMethodField(read_only=True)
-
-    class Meta:
-        model = Product
-        fields = [
-            'id', 'seller', 'category', 'name', 'slug', 'description', 'price',
-            'main_image', 'brand', 'stock', 'rating', 'is_active',
-            'created_at', 'images', 'attributes', 'keywords'
-        ]
-        read_only_fields = ['id', 'slug', 'created_at', 'images', 'attributes', 'keywords']
-
-    def get_images(self, obj):
-        return ProductImageSerializer(obj.images.all(), many=True).data
-
-    def get_attributes(self, obj):
-        return ProductAttributeSerializer(obj.attributes.all(), many=True).data
-
-    def get_keywords(self, obj):
-        return SearchKeywordSerializer(obj.keywords.all(), many=True).data
 
 # ------------------------------
 # ProductImage Serializer
@@ -53,46 +25,8 @@ class ProductSerializer(serializers.ModelSerializer):
 class ProductImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductImage
-        fields = ['id', 'product', 'image', 'is_main']
+        fields = ['id', 'image', 'is_main']
         read_only_fields = ['id']
-
-
-# ------------------------------
-# SellerProduct Serializer
-# ------------------------------
-class SellerProductSerializer(serializers.ModelSerializer):
-    product = ProductSerializer(read_only=True)
-    variant_prices = serializers.SerializerMethodField(read_only=True)
-
-    class Meta:
-        model = SellerProduct
-        fields = ['id', 'product', 'seller', 'price', 'old_price', 'stock', 'sku', 'is_active', 'created_at', 'variant_prices']
-        read_only_fields = ['id', 'created_at', 'variant_prices']
-
-    def get_variant_prices(self, obj):
-        return SellerProductVariantPriceSerializer(obj.variant_prices.all(), many=True).data
-
-
-# ------------------------------
-# ProductVariant Serializer
-# ------------------------------
-class ProductVariantSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ProductVariant
-        fields = ['id', 'product', 'type', 'value']
-        read_only_fields = ['id']
-
-
-# ------------------------------
-# SellerProductVariantPrice Serializer
-# ------------------------------
-class SellerProductVariantPriceSerializer(serializers.ModelSerializer):
-    variant = ProductVariantSerializer(read_only=True)
-
-    class Meta:
-        model = SellerProductVariantPrice
-        fields = ['id', 'seller_product', 'variant', 'price', 'stock']
-        read_only_fields = ['id', 'variant']
 
 
 # ------------------------------
@@ -101,20 +35,8 @@ class SellerProductVariantPriceSerializer(serializers.ModelSerializer):
 class ProductAttributeSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductAttribute
-        fields = ['id', 'product', 'key', 'value']
+        fields = ['id', 'key', 'value']
         read_only_fields = ['id']
-
-
-# ------------------------------
-# ProductModeration Serializer
-# ------------------------------
-class ProductModerationSerializer(serializers.ModelSerializer):
-    staff = serializers.StringRelatedField(read_only=True)
-
-    class Meta:
-        model = ProductModeration
-        fields = ['id', 'product', 'seller', 'status', 'staff', 'reason', 'created_at', 'updated_at']
-        read_only_fields = ['id', 'created_at', 'updated_at', 'staff']
 
 
 # ------------------------------
@@ -123,5 +45,148 @@ class ProductModerationSerializer(serializers.ModelSerializer):
 class SearchKeywordSerializer(serializers.ModelSerializer):
     class Meta:
         model = SearchKeyword
-        fields = ['id', 'product', 'keyword']
+        fields = ['id', 'keyword']
         read_only_fields = ['id']
+
+
+# ------------------------------
+# Product Serializer (Nested create/update)
+# ------------------------------
+class ProductSerializer(serializers.ModelSerializer):
+    category = serializers.PrimaryKeyRelatedField(queryset=Category.objects.all())
+    images = ProductImageSerializer(many=True, required=False)
+    attributes = ProductAttributeSerializer(many=True, required=False)
+    keywords = SearchKeywordSerializer(many=True, required=False)
+
+    class Meta:
+        model = Product
+        fields = [
+            'id', 'seller', 'category', 'name', 'slug', 'description', 'price',
+            'main_image', 'brand', 'stock', 'rating', 'is_active',
+            'created_at', 'images', 'attributes', 'keywords'
+        ]
+        read_only_fields = ['id', 'slug', 'created_at']
+
+    def create(self, validated_data):
+        images_data = validated_data.pop('images', [])
+        attributes_data = validated_data.pop('attributes', [])
+        keywords_data = validated_data.pop('keywords', [])
+
+        product = Product.objects.create(**validated_data)
+
+        for image in images_data:
+            ProductImage.objects.create(product=product, **image)
+
+        for attr in attributes_data:
+            ProductAttribute.objects.create(product=product, **attr)
+
+        for kw in keywords_data:
+            SearchKeyword.objects.create(product=product, **kw)
+
+        return product
+
+    def update(self, instance, validated_data):
+        images_data = validated_data.pop('images', [])
+        attributes_data = validated_data.pop('attributes', [])
+        keywords_data = validated_data.pop('keywords', [])
+
+        # Update main product fields
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+
+        # Update nested images
+        if images_data:
+            instance.images.all().delete()
+            for image in images_data:
+                ProductImage.objects.create(product=instance, **image)
+
+        # Update nested attributes
+        if attributes_data:
+            instance.attributes.all().delete()
+            for attr in attributes_data:
+                ProductAttribute.objects.create(product=instance, **attr)
+
+        # Update nested keywords
+        if keywords_data:
+            instance.keywords.all().delete()
+            for kw in keywords_data:
+                SearchKeyword.objects.create(product=instance, **kw)
+
+        return instance
+
+
+# ------------------------------
+# SellerProductVariantPrice Serializer
+# ------------------------------
+class ProductVariantSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductVariant
+        fields = ['id', 'type', 'value']
+        read_only_fields = ['id']
+
+
+class SellerProductVariantPriceSerializer(serializers.ModelSerializer):
+    variant = ProductVariantSerializer()
+
+    class Meta:
+        model = SellerProductVariantPrice
+        fields = ['id', 'variant', 'price', 'stock']
+        read_only_fields = ['id', 'variant']
+
+
+# ------------------------------
+# SellerProduct Serializer (Nested variant_prices)
+# ------------------------------
+class SellerProductSerializer(serializers.ModelSerializer):
+    variant_prices = SellerProductVariantPriceSerializer(many=True, required=False)
+    product = ProductSerializer()
+
+    class Meta:
+        model = SellerProduct
+        fields = ['id', 'product', 'seller', 'price', 'old_price', 'stock', 'sku', 'is_active', 'variant_prices']
+        read_only_fields = ['id']
+
+    def create(self, validated_data):
+        product_data = validated_data.pop('product')
+        variant_prices_data = validated_data.pop('variant_prices', [])
+
+        # Create or update nested product
+        product_serializer = ProductSerializer(data=product_data)
+        product_serializer.is_valid(raise_exception=True)
+        product = product_serializer.save()
+
+        seller_product = SellerProduct.objects.create(product=product, **validated_data)
+
+        # Nested variant prices
+        for vp in variant_prices_data:
+            variant_data = vp.pop('variant')
+            variant_obj, _ = ProductVariant.objects.get_or_create(product=product, **variant_data)
+            SellerProductVariantPrice.objects.create(seller_product=seller_product, variant=variant_obj, **vp)
+
+        return seller_product
+
+    def update(self, instance, validated_data):
+        product_data = validated_data.pop('product', None)
+        variant_prices_data = validated_data.pop('variant_prices', [])
+
+        # Update main fields
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+
+        # Update nested product
+        if product_data:
+            product_serializer = ProductSerializer(instance.product, data=product_data, partial=True)
+            product_serializer.is_valid(raise_exception=True)
+            product_serializer.save()
+
+        # Update variant prices
+        if variant_prices_data:
+            instance.variant_prices.all().delete()
+            for vp in variant_prices_data:
+                variant_data = vp.pop('variant')
+                variant_obj, _ = ProductVariant.objects.get_or_create(product=instance.product, **variant_data)
+                SellerProductVariantPrice.objects.create(seller_product=instance, variant=variant_obj, **vp)
+
+        return instance
