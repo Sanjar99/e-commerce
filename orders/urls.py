@@ -7,9 +7,9 @@ from .views import (
 )
 
 router = DefaultRouter()
-router.register('orders', OrderViewSet)
-router.register('order-groups', OrderSellerGroupViewSet)
-router.register('order-items', OrderItemViewSet)
+router.register('orders', OrderViewSet, basename='order')
+router.register('order-groups', OrderSellerGroupViewSet, basename='order-group')
+router.register('order-items', OrderItemViewSet, basename='order-item')
 
 urlpatterns = [
     path('', include(router.urls)),

@@ -3,8 +3,8 @@ from django.urls import path, include
 from .views import WishlistViewSet, WishlistItemViewSet
 
 router = DefaultRouter()
-router.register('wishlists', WishlistViewSet)
-router.register('wishlist-items', WishlistItemViewSet)
+router.register('wishlists', WishlistViewSet, basename='wishlist')
+router.register('wishlist-items', WishlistItemViewSet, basename='wishlist-items')
 
 urlpatterns = [
     path('', include(router.urls)),

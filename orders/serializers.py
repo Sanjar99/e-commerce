@@ -2,7 +2,7 @@ from rest_framework import serializers
 from .models import Address, Order, OrderSellerGroup, OrderItem
 from accounts.serializers import UserSerializer
 from products.serializers import SellerProductSerializer
-from seller.serializers import SellerSerializer
+from seller.models import Seller  # serializer emas, modelni ishlatamiz
 
 # ------------------------------
 # Address Serializer
@@ -10,7 +10,9 @@ from seller.serializers import SellerSerializer
 class AddressSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     user_id = serializers.PrimaryKeyRelatedField(
-        queryset=UserSerializer.Meta.model.objects.all(), source='user', write_only=True
+        queryset=UserSerializer.Meta.model.objects.all(),
+        source='user',
+        write_only=True
     )
 
     class Meta:
@@ -24,7 +26,9 @@ class AddressSerializer(serializers.ModelSerializer):
 class OrderItemSerializer(serializers.ModelSerializer):
     seller_product = SellerProductSerializer(read_only=True)
     seller_product_id = serializers.PrimaryKeyRelatedField(
-        queryset=SellerProductSerializer.Meta.model.objects.all(), source='seller_product', write_only=True
+        queryset=SellerProductSerializer.Meta.model.objects.all(),
+        source='seller_product',
+        write_only=True
     )
 
     class Meta:
@@ -36,9 +40,11 @@ class OrderItemSerializer(serializers.ModelSerializer):
 # OrderSellerGroup Serializer
 # ------------------------------
 class OrderSellerGroupSerializer(serializers.ModelSerializer):
-    seller = SellerSerializer(read_only=True)
+    seller = serializers.StringRelatedField(read_only=True)
     seller_id = serializers.PrimaryKeyRelatedField(
-        queryset=SellerSerializer.objects.all(), source='seller', write_only=True
+        queryset=Seller.objects.all(),  # <- modelga bog'landi
+        source='seller',
+        write_only=True
     )
     items = OrderItemSerializer(many=True)
 
@@ -65,11 +71,15 @@ class OrderSellerGroupSerializer(serializers.ModelSerializer):
 class OrderSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     user_id = serializers.PrimaryKeyRelatedField(
-        queryset=UserSerializer.Meta.model.objects.all(), source='user', write_only=True
+        queryset=UserSerializer.Meta.model.objects.all(),
+        source='user',
+        write_only=True
     )
     shipping_address = AddressSerializer(read_only=True)
     shipping_address_id = serializers.PrimaryKeyRelatedField(
-        queryset=AddressSerializer.Meta.model.objects.all(), source='shipping_address', write_only=True
+        queryset=Address.objects.all(),
+        source='shipping_address',
+        write_only=True
     )
     seller_groups = OrderSellerGroupSerializer(many=True)
 

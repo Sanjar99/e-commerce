@@ -1,10 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
 
-from products.models import SellerProduct
-from seller.models import Seller
-
-
 # -------------------------
 # Address
 #       Vazifasi: Foydalanuvchining yetkazib berish manzillarini saqlaydi.
@@ -75,7 +71,7 @@ class OrderSellerGroup(models.Model):
         (DELIVERED, 'Delivered'),
     ]
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='seller_groups')
-    seller = models.ForeignKey(Seller, on_delete=models.CASCADE)
+    seller = models.ForeignKey('seller.Seller', on_delete=models.CASCADE)
     seller_total_price = models.DecimalField(max_digits=12, decimal_places=2)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=AWAITING)
 
@@ -89,7 +85,7 @@ class OrderSellerGroup(models.Model):
 # -------------------------
 class OrderItem(models.Model):
     seller_group = models.ForeignKey(OrderSellerGroup, on_delete=models.CASCADE, related_name='items')
-    seller_product = models.ForeignKey(SellerProduct, on_delete=models.CASCADE)
+    seller_product = models.ForeignKey('products.SellerProduct', on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField(default=1)
     price = models.DecimalField(max_digits=12, decimal_places=2)
 

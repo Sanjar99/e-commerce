@@ -8,10 +8,10 @@ from .views import (
 )
 
 router = DefaultRouter()
-router.register('sellers', SellerViewSet)
-router.register('seller-balances', SellerBalanceViewSet)
-router.register('seller-payouts', SellerPayoutViewSet)
-router.register('seller-verifications', SellerVerificationViewSet)
+router.register('sellers', SellerViewSet, basename='seller')
+router.register('seller-balances', SellerBalanceViewSet, basename='seller-balance')
+router.register('seller-payouts', SellerPayoutViewSet, basename='seller-payout')
+router.register('seller-verifications', SellerVerificationViewSet, basename='seller-verification')
 
 urlpatterns = [
     path('', include(router.urls)),

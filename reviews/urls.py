@@ -3,7 +3,7 @@ from django.urls import path, include
 from .views import ReviewViewSet
 
 router = DefaultRouter()
-router.register('reviews', ReviewViewSet)
+router.register('reviews', ReviewViewSet, basename='reviews')
 
 urlpatterns = [
     path('', include(router.urls)),

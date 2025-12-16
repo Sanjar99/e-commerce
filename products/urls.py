@@ -8,10 +8,10 @@ from .views import (
 )
 
 router = DefaultRouter()
-router.register('categories', CategoryViewSet)
-router.register('products', ProductViewSet)
-router.register('product-images', ProductImageViewSet)
-router.register('product-variants', ProductVariantViewSet)
+router.register('categories', CategoryViewSet, basename='category')
+router.register('products', ProductViewSet, basename='product')
+router.register('product-images', ProductImageViewSet, basename='product-image')
+router.register('product-variants', ProductVariantViewSet, basename='product-variant')
 
 urlpatterns = [
     path('', include(router.urls)),

@@ -36,7 +36,7 @@ class Category(models.Model):
 # -------------------------
 
 class Product(models.Model):
-    seller = models.ForeignKey(Seller, on_delete=models.CASCADE, related_name='products')
+    seller = models.ForeignKey('seller.Seller', on_delete=models.CASCADE, related_name='products')
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='products_in_category')
     name = models.CharField(max_length=255)
     slug = models.SlugField(max_length=255, unique=True, blank=True)
@@ -78,7 +78,7 @@ class ProductImage(models.Model):
 # -------------------------
 class SellerProduct(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='seller_products')
-    seller = models.ForeignKey(Seller, on_delete=models.CASCADE, related_name='products')
+    seller = models.ForeignKey('seller.Seller', on_delete=models.CASCADE, related_name='products_seller')
     price = models.DecimalField(max_digits=12, decimal_places=2)
     old_price = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
     stock = models.PositiveIntegerField(default=0)
@@ -150,7 +150,7 @@ class ProductModeration(models.Model):
         (REJECTED, 'Rejected'),
     ]
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    seller = models.ForeignKey(Seller, on_delete=models.CASCADE)
+    seller = models.ForeignKey('seller.Seller', on_delete=models.CASCADE, related_name='products_moderation')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=PENDING)
     staff = models.ForeignKey(StaffUser, on_delete=models.SET_NULL, null=True, blank=True)
     reason = models.TextField(blank=True, null=True)

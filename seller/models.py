@@ -2,10 +2,6 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.utils.text import slugify
 
-from staff.models import StaffUser
-
-
-
 # -------------------------
 #   SELLER
 #       Vazifasi: Marketplace’dagi sotuvchi hisobini ifodalaydi.
@@ -63,7 +59,7 @@ class SellerPayout(models.Model):
     seller = models.ForeignKey(Seller, on_delete=models.CASCADE)
     amount = models.DecimalField(max_digits=12, decimal_places=2)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=PENDING)
-    staff = models.ForeignKey(StaffUser, on_delete=models.SET_NULL, null=True, blank=True)
+    staff = models.ForeignKey('staff.StaffUser', on_delete=models.SET_NULL, null=True, blank=True)
     requested_at = models.DateTimeField(auto_now_add=True)
     processed_at = models.DateTimeField(blank=True, null=True)
 
@@ -86,7 +82,7 @@ class SellerVerification(models.Model):
     ]
     seller = models.ForeignKey(Seller, on_delete=models.CASCADE)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=PENDING)
-    staff = models.ForeignKey(StaffUser, on_delete=models.SET_NULL, null=True, blank=True)
+    staff = models.ForeignKey('staff.StaffUser', on_delete=models.SET_NULL, null=True, blank=True)
     document = models.FileField(upload_to='seller_documents/')
     reason = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)

@@ -4,7 +4,7 @@ from .views import ActivityLogViewSet
 
 router = DefaultRouter()
 
-router.register('activity-logs', ActivityLogViewSet)
+router.register('activity-logs', ActivityLogViewSet, basename='logs')
 
 urlpatterns = [
     path('', include(router.urls)),

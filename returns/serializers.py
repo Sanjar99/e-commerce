@@ -2,7 +2,7 @@ from rest_framework import serializers
 from .models import ReturnRequest
 from accounts.serializers import UserSerializer
 from staff.serializers import StaffUserSerializer
-from order.serializers import OrderItemSerializer
+from orders.serializers import OrderItemSerializer
 
 # ------------------------------
 # ReturnRequest Serializer

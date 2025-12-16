@@ -3,7 +3,7 @@ from django.urls import path, include
 from .views import NotificationViewSet
 
 router = DefaultRouter()
-router.register('notifications', NotificationViewSet)
+router.register('notifications', NotificationViewSet, basename='notifications')
 
 urlpatterns = [
     path('', include(router.urls)),
