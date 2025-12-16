@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from staff.models import StaffUser
 
 # -------------------------
-# ShippingProvider
+# ActivityLog
 #       Vazifasi: Tizimda bo‘layotgan muhim harakatlarni log qilish (audit trail).
 #       Nima uchun kerak: Security (kim nima qildi?)
 #               Debugging (qachon va nima o‘zgardi?)
