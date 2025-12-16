@@ -1,6 +1,6 @@
 from django.db import models
 
-from order.models import OrderSellerGroup
+from orders.models import OrderSellerGroup
 # -------------------------
 # ShippingProvider
 #       Vazifasi: Yetkazib beruvchi kompaniyalarni saqlaydi (kargo xizmati).

@@ -36,16 +36,21 @@ INSTALLED_APPS = [
 
     # Project apps
     'accounts',
-    'products',
-    'seller',
+    'analytics',
     'cart',
+    'coupon',
+    'logs',
+    'notifications',
     'orders',
     'payments',
+    'products',
+    'returns',
     'reviews',
-    'discounts',
-    'wishlist',
+    'shipping',
+    'seller',
     'staff',
     'support',
+    'wishlist',
 ]
 
 # -------------------------
