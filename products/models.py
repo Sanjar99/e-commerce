@@ -1,7 +1,5 @@
 from django.db import models
 from django.utils.text import slugify
-
-from seller.models import Seller
 from staff.models import StaffUser
 
 

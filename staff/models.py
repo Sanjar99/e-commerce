@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import User
+from django.conf import settings
 
 # -------------------------
 # StaffRole
@@ -41,7 +41,10 @@ class StaffRole(models.Model):
 #           Qaysi rolga ega ekanini va nimani boshqarishini bilish
 # -------------------------
 class StaffUser(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE
+    )
     role = models.ForeignKey(StaffRole, on_delete=models.SET_NULL, null=True)
     assigned_categories = models.ManyToManyField('products.Category', blank=True)
     assigned_sellers = models.ManyToManyField('seller.Seller', blank=True)
@@ -118,7 +121,10 @@ class SupportTicket(models.Model):
         (IN_PROGRESS, 'In Progress'),
         (CLOSED, 'Closed'),
     ]
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE
+    )
     seller = models.ForeignKey('seller.Seller', on_delete=models.SET_NULL, null=True, blank=True)
     order_id = models.PositiveIntegerField(null=True, blank=True)
     subject = models.CharField(max_length=255)

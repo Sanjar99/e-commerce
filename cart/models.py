@@ -1,6 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import User
-
+from django.conf import settings
 from products.models import SellerProduct
 
 # -------------------------
@@ -10,7 +9,10 @@ from products.models import SellerProduct
 #       Qiziq nuqta:created_at orqali cartning qachon yaratilganini kuzatish mumkin.
 # -------------------------
 class Cart(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

@@ -1,6 +1,6 @@
 from django.db import models
-from django.contrib.auth.models import User
 from django.utils.text import slugify
+from django.conf import settings
 
 # -------------------------
 #   SELLER
@@ -9,7 +9,10 @@ from django.utils.text import slugify
 # -------------------------
 
 class Seller(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE
+    )
     shop_name = models.CharField(max_length=255)
     shop_slug = models.SlugField(max_length=255, unique=True, blank=True)
     description = models.TextField(blank=True, null=True)

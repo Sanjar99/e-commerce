@@ -1,6 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import User
-
+from django.conf import settings
 from products.models import Product
 
 # -------------------------
@@ -11,7 +10,10 @@ from products.models import Product
 #               Marketing (wishlist’dagi productlar bo‘yicha promo)
 # -------------------------
 class Wishlist(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE
+    )
 
     def __str__(self):
         return f"{self.user.username} wishlist"

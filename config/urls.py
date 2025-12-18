@@ -40,9 +40,6 @@ urlpatterns = [
     # Seller
     path('api/seller/', include('seller.urls')),
 
-    # Support / Ticketing
-    path('api/support/', include('support.urls')),
-
     # Analytics
     path('api/analytics/', include('analytics.urls')),
 

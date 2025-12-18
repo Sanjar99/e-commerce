@@ -27,7 +27,7 @@ class StaffUserSerializer(serializers.ModelSerializer):
     )
     assigned_sellers = serializers.StringRelatedField(many=True, read_only=True)
     assigned_sellers_ids = serializers.PrimaryKeyRelatedField(
-        many=True, queryset=Seller.objects.all(), source='assigned_sellers', write_only=True
+        many=True, queryset=Seller.objects.all(), source='staff_assigned_tickets', write_only=True
     )
 
     class Meta:

@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import User
+from django.conf import settings
 
 from products.models import Product
 
@@ -12,7 +12,10 @@ from products.models import Product
 #           rating 1–5 yoki boshqa oraliqda bo‘lishi mumkin, UI’da yulduzcha ko‘rinishida chiqadi.
 # -------------------------
 class Review(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE
+    )
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='reviews')
     rating = models.PositiveSmallIntegerField()
     comment = models.TextField(blank=True, null=True)

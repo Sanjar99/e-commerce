@@ -1,5 +1,6 @@
 from django.db import models
-from django.contrib.auth.models import User
+from django.conf import settings
+
 # -------------------------
 # ReturnRequest
 #       Vazifasi: Foydalanuvchining mahsulotni qaytarish (refund/return) so‘rovini saqlaydi.
@@ -18,8 +19,12 @@ class ReturnRequest(models.Model):
         (REJECTED, 'Rejected'),
         (REFUNDED, 'Refunded'),
     ]
-    order_item = models.ForeignKey('order.OrderItem', on_delete=models.CASCADE)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    order_item = models.ForeignKey('orders.OrderItem', on_delete=models.CASCADE)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE
+    )
     reason = models.TextField()
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=PENDING)
     staff = models.ForeignKey('staff.StaffUser', on_delete=models.SET_NULL, null=True, blank=True)

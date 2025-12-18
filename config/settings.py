@@ -1,11 +1,13 @@
-import os
 from pathlib import Path
+import os
 from dotenv import load_dotenv
 
 # -------------------------
 # Load .env
 # -------------------------
-load_dotenv()
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+load_dotenv(BASE_DIR / '.env')
 
 # -------------------------
 # BASE DIR
@@ -49,7 +51,6 @@ INSTALLED_APPS = [
     'shipping',
     'seller',
     'staff',
-    'support',
     'wishlist',
 ]
 

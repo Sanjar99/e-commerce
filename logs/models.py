@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import User
+from django.conf import settings
 from staff.models import StaffUser
 
 # -------------------------
@@ -10,7 +10,10 @@ from staff.models import StaffUser
 #               Audit (admin/staff faoliyatini tekshirish)
 # -------------------------
 class ActivityLog(models.Model):
-    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE
+    )
     staff = models.ForeignKey(StaffUser, on_delete=models.SET_NULL, null=True, blank=True)
     action = models.CharField(max_length=255)
     meta_json = models.JSONField(blank=True, null=True)

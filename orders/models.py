@@ -1,5 +1,7 @@
 from django.db import models
-from django.contrib.auth.models import User
+from django.conf import settings
+
+
 
 # -------------------------
 # Address
@@ -7,7 +9,10 @@ from django.contrib.auth.models import User
 #       Nima uchun kerak: Har bir user bir yoki bir nechta manzilga ega bo‘lishi mumkin; is_default orqali asosiy manzilni belgilash mumkin.
 # -------------------------
 class Address(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE
+    )
     street = models.CharField(max_length=255)
     district = models.CharField(max_length=100)
     city = models.CharField(max_length=100)
@@ -38,7 +43,10 @@ class Order(models.Model):
         (COMPLETED, 'Completed'),
         (CANCELED, 'Canceled'),
     ]
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE
+    )
     order_number = models.CharField(max_length=100, unique=True)
     total_price = models.DecimalField(max_digits=12, decimal_places=2)
     total_items = models.PositiveIntegerField(default=0)
@@ -76,7 +84,7 @@ class OrderSellerGroup(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=AWAITING)
 
     def __str__(self):
-        return f"{self.order.order_number} - {self.seller.shop_name}"
+        return f"{self.orders.order_number} - {self.seller.shop_name}"
 # -------------------------
 # OrderItem
 #       Vazifasi: OrderSellerGroup’dagi har bir productni saqlaydi.
