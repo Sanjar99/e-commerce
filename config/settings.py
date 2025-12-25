@@ -3,16 +3,14 @@ import os
 from dotenv import load_dotenv
 
 # -------------------------
-# Load .env
-# -------------------------
-BASE_DIR = Path(__file__).resolve().parent.parent
-
-load_dotenv(BASE_DIR / '.env')
-
-# -------------------------
 # BASE DIR
 # -------------------------
 BASE_DIR = Path(__file__).resolve().parent.parent
+# -------------------------
+# Load .env
+# -------------------------
+
+load_dotenv(BASE_DIR / '.env')
 
 # -------------------------
 # SECURITY
@@ -34,6 +32,7 @@ INSTALLED_APPS = [
 
     # Third-party
     'rest_framework',
+    'drf_yasg',
     'django_filters',
 
     # Project apps
@@ -99,7 +98,7 @@ TEMPLATES = [
 # -------------------------
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'ENGINE': 'django.db.backends.postgresql',
         'NAME': os.getenv('DB_NAME'),
         'USER': os.getenv('DB_USER'),
         'PASSWORD': os.getenv('DB_PASSWORD'),
@@ -144,13 +143,13 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # REST FRAMEWORK
 # -------------------------
 REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
+    ],
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        # 'rest_framework_simplejwt.authentication.JWTAuthentication',
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.BasicAuthentication',
-    ],
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
     ],
     'DEFAULT_FILTER_BACKENDS': [
         'django_filters.rest_framework.DjangoFilterBackend'
