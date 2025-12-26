@@ -45,9 +45,9 @@ urlpatterns = [
     path('', schema_view.with_ui('swagger', cache_timeout = 0), name= "schema-swagger-ui"),
     path('redoc/', schema_view.with_ui('redoc', cache_timeout = 0), name = 'schema-redoc'),
 
-    # JWT
-    path('api/v1/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('api/v1/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    # Djoser
+    path('api/v1/auth/', include('djoser.urls')),
+    path('api/v1/auth/', include('djoser.urls.jwt')),
 ]
 
 # Media files
