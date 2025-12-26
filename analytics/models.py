@@ -9,13 +9,12 @@ from products.models import Product
 #       Qiziq nuqta: Backend avtomatik kunlik hisobotlarni yangilashi mumkin.
 # -------------------------
 class AnalyticsDaily(models.Model):
-    date = models.DateField()
+    date = models.DateField(unique=True)
     users_count = models.PositiveIntegerField(default=0)
     orders_count = models.PositiveIntegerField(default=0)
     revenue = models.DecimalField(max_digits=15, decimal_places=2, default=0)
     seller_count = models.PositiveIntegerField(default=0)
     new_products = models.PositiveIntegerField(default=0)
-
 # -------------------------
 # RecentlyViewed
 #       Vazifasi:Foydalanuvchi tomonidan yaqinda ko‘rilgan productlarni saqlaydi.
@@ -29,3 +28,6 @@ class RecentlyViewed(models.Model):
     )
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     viewed_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-viewed_at']
