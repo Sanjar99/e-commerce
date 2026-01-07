@@ -174,14 +174,18 @@ SIMPLE_JWT = {
 # DJOSER
 # -------------------------
 DJOSER = {
-    'LOGIN_FIELD': 'sanjarruzmanov999@gmail.com',
+    'LOGIN_FIELD': 'email',
     'USER_CREATE_PASSWORD_RETYPE': True,
+    'SEND_ACTIVATION_EMAIL': True,   # yoki test uchun False
+    'ACTIVATION_URL': 'activate/{uid}/{token}',
     'SERIALIZERS': {
         'user_create': 'accounts.serializers.UserCreateSerializer',
         'user': 'accounts.serializers.UserSerializer',
         'current_user': 'accounts.serializers.UserSerializer',
     },
 }
+
+
 # -------------------------
 # DRF-YASG (Swagger)
 # -------------------------
@@ -196,3 +200,15 @@ SWAGGER_SETTINGS = {
     },
     'USE_SESSION_AUTH': False,  # admin session bilan chalkashmasin
 }
+
+# -------------------------
+# Email
+# -------------------------
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
