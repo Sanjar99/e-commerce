@@ -6,16 +6,15 @@ from django.contrib.auth import get_user_model
 from django.utils.http import urlsafe_base64_decode
 from django.utils.encoding import force_str
 from rest_framework.views import APIView
-from djoser import signals
-from djoser.conf import settings as djoser_settings
-from djoser.utils import decode_uid
-from .models import User
-from .serializers import UserSerializer
-
+from rest_framework.viewsets import ModelViewSet
 from django.contrib.auth.tokens import default_token_generator
+from djoser import signals
+from .serializers import UserSerializer, UserMeSerializer, UpdateProfileSerializer
+
+User = get_user_model()
 
 # ------------------------------
-# Custom permission: Admin yoki Staff
+# Custom Permissions
 # ------------------------------
 class IsAdminOrStaff(BasePermission):
     """
@@ -28,49 +27,54 @@ class IsAdminOrStaff(BasePermission):
 
 
 # ------------------------------
-# User ViewSet
+# SuperAdmin user CRUD
 # ------------------------------
-class UserViewSet(viewsets.ModelViewSet):
+class AdminUserViewSet(ModelViewSet):
+    """
+    Faqat SuperAdmin:
+    - user list
+    - user detail
+    - block/unblock
+    """
+    queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [IsAdminOrStaff]  # faqat admin/staff userlar
-    filter_backends = [filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend]
-
-    search_fields = ['username', 'email', 'phone']
-    ordering_fields = ['id', 'date_joined']
-    ordering = ['-date_joined']  # default: yangi userlar birinchi
-
-    filterset_fields = ['is_active', 'is_seller']  # filter qilish mumkin
-
-    def get_queryset(self):
-        """
-        Faqat faollashtirilgan userlar:
-        - admin xohlagan holatda barcha userlarni ko‘rishi mumkin
-        """
-        user = self.request.user
-        if user.is_staff:
-            # Admin: barcha userlarni ko‘radi
-            return User.objects.all()
-        else:
-            # Staff: faqat active userlar
-            return User.objects.filter(is_active=True)
-
-    def destroy(self, request, *args, **kwargs):
-        """
-        Optional: userni soft delete qilish mumkin.
-        Hozircha hard delete
-        """
-        instance = self.get_object()
-        self.perform_destroy(instance)
-        return Response(status=status.HTTP_204_NO_CONTENT)
+    permission_classes = [IsAdminOrStaff]  # SuperAdmin, staff userlar
 
 
-User = get_user_model()
+# ------------------------------
+# User Me (Profile) View
+# ------------------------------
+class UserMeView(APIView):
+    """
+    /me/ endpoint
+    Foydalanuvchi o‘z profile’ini ko‘radi
+    """
+    def get(self, request):
+        serializer = UserMeSerializer(request.user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
+
+# ------------------------------
+# Update Profile View
+# ------------------------------
+class UpdateProfileView(APIView):
+    """
+    Foydalanuvchi o‘z profile’ini yangilaydi
+    """
+    def put(self, request):
+        serializer = UpdateProfileSerializer(request.user, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+# ------------------------------
+# User Activation View
+# ------------------------------
 class UserActivateView(APIView):
     """
-    User activation view using default Django token generator.
+    User activation using Django token
     """
-
     def get(self, request, uid, token):
         try:
             uid = force_str(urlsafe_base64_decode(uid))

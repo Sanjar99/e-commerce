@@ -9,15 +9,18 @@ phone_regex = RegexValidator(
 )
 
 class User(AbstractBaseUser, PermissionsMixin):
-    username = models.CharField(max_length=150)
+    username = models.CharField(max_length=150, unique=True)
+
     email = models.EmailField(unique=True)
+
     phone = models.CharField(
         validators=[phone_regex],
         max_length=13,
         unique=True,
-        blank = False,
-        null = False
+        blank=True,
+        null=True
     )
+
     avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
 
     is_active = models.BooleanField(default=False)
@@ -29,7 +32,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     objects = UserManager()
 
     USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = ["username", "phone"]
+    REQUIRED_FIELDS = ["username"]
 
     def __str__(self):
         return self.email

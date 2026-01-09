@@ -3,6 +3,8 @@ from django.conf import settings
 
 # -------------------------
 # StaffRole
+#       Vazifasi: Platformadagi admin/staff rollarini belgilaydi.
+#       Nima uchun kerak: Kim nima ish qila olishini ajratish (permission logic).
 # -------------------------
 class StaffRole(models.Model):
     SUPER_ADMIN = 'super_admin'
@@ -42,6 +44,9 @@ class StaffRole(models.Model):
 
 # -------------------------
 # StaffUser
+#       Vazifasi: Platforma xodimlarini saqlaydi.
+#       Nima uchun kerak: Oddiy Userni staff sifatida ajratish
+#           Qaysi rolga ega ekanini va nimani boshqarishini bilish
 # -------------------------
 class StaffUser(models.Model):
     user = models.OneToOneField(
@@ -54,11 +59,13 @@ class StaffUser(models.Model):
     )
     assigned_categories = models.ManyToManyField(
         'products.Category',
-        blank=True
+        blank=True,
+        null=True
     )
     assigned_sellers = models.ManyToManyField(
         'seller.Seller',
-        blank=True
+        blank=True,
+        null=True
     )
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -73,6 +80,8 @@ class StaffUser(models.Model):
 
 # -------------------------
 # ModerationLog
+#       Vazifasi:Staff qilgan har bir muhim harakatni log qilish.
+#       Nima uchun kerak: Audit (kim nima qildi?), Security, Xatoni tekshirish (debug)
 # -------------------------
 class ModerationLog(models.Model):
     APPROVE_PRODUCT = 'approve_product'
@@ -127,6 +136,9 @@ class ModerationLog(models.Model):
 
 # -------------------------
 # SupportTicket
+#       Vazifasi: User yoki sellerlardan kelgan support murojaatlarini saqlaydi.
+#       Nima uchun kerak: Customer support tizimi
+#               Order bilan bog‘liq muammolarni kuzatish
 # -------------------------
 class SupportTicket(models.Model):
     OPEN = 'open'

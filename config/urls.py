@@ -19,9 +19,16 @@ schema_view = get_schema_view(
    public=True,
 )
 urlpatterns = [
-    # Apps
-    path('admin/' , admin.site.urls),
-    path('api/v1/', include("accounts.urls")),
+    path('admin/', admin.site.urls),
+
+    # Auth (faqat Djoser)
+    path('api/v1/auth/', include('djoser.urls')),
+    path('api/v1/auth/', include('djoser.urls.jwt')),
+
+    # ADMIN USER MANAGEMENT
+    path('api/v1/admin/', include('accounts.urls')),
+
+    # Other apps
     # path('api/v1/', include("products.urls")),
     # path('api/v1/', include("orders.urls")),
     # path('api/v1/', include("cart.urls")),
@@ -30,8 +37,8 @@ urlpatterns = [
     # path('api/v1/', include("reviews.urls")),
     # path('api/v1/', include("coupon.urls")),
     # path('api/v1/', include("notifications.urls")),
-    path('api/v1/', include("staff.urls")),
-    path('api/v1/', include("seller.urls")),
+    # path('api/v1/', include("staff.urls")),
+    # path('api/v1/', include("seller.urls")),
     # path('api/v1/', include("analytics.urls")),
     # path('api/v1/', include("shipping.urls")),
     # path('api/v1/', include("returns.urls")),
@@ -43,10 +50,8 @@ urlpatterns = [
     path('redoc/', schema_view.with_ui('redoc', cache_timeout = 0), name = 'schema-redoc'),
 
     # Djoser activation endpoint
-    path('api/v1/auth/users/activate/<uid>/<token>/', UserActivateView.as_view(), name='user-activate'),
-    # Djoser
-    path('api/v1/auth/', include('djoser.urls')),
-    path('api/v1/auth/', include('djoser.urls.jwt')),
+    path('api/v1/auth/users/activate/<uid>/<token>/', UserActivateView.as_view(), name='user-activate'), # frontend uchun aslida keraksiz
+
 ]
 
 # Media files
