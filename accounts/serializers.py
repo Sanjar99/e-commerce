@@ -13,19 +13,29 @@ class UserSerializer(BaseUserSerializer):
     class Meta(BaseUserSerializer.Meta):
         model = User
         fields = (
-            'id',
-            'email',
-            'username',
-            'phone',
-            'avatar',
-            'is_seller',
+            'id', 'email', 'username', 'phone', 'avatar',
+            'is_active', 'is_staff', 'is_seller',
+            'last_login', 'date_joined',
         )
 
+class AdminUserUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('username','phone','is_active','is_staff','is_seller','avatar')
+        extra_kwargs = {
+            "username": {"required": False, "allow_blank": True},
+            "phone": {"required": False, "allow_blank": True},
+            "avatar": {"required": False, "allow_null": True},
+            "is_active": {"required": False},
+            "is_staff": {"required": False},
+            "is_seller": {"required": False},
+        }
 
-# ------------------------------
+# -------------------
 # User Create Serializer (REGISTRATION)
 # ------------------------------
 class UserCreateSerializer(BaseUserCreateSerializer):
+    avatar = serializers.ImageField(required=False, allow_null=True)
     class Meta(BaseUserCreateSerializer.Meta):
         model = User
         fields = (
@@ -33,6 +43,7 @@ class UserCreateSerializer(BaseUserCreateSerializer):
             'email',
             'username',
             'phone',
+            'avatar',
             'password',
             're_password',
         )
@@ -75,7 +86,10 @@ class UpdateProfileSerializer(serializers.ModelSerializer):
             'phone',
             'avatar',
         )
-
+    def validate_username(self, value):
+        if not value:
+            raise serializers.ValidationError("Username is required.")
+        return value
     def validate_phone(self, value):
         if not value:
             raise serializers.ValidationError("Phone number is required.")

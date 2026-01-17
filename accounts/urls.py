@@ -5,21 +5,24 @@ from .views import (
     AdminUserViewSet,
     UserMeView,
     UpdateProfileView,
-    UserActivateView
+    UserActivateView,
+    CustomUserViewSet
 )
-from djoser import views as djoser_views
 
 router = DefaultRouter()
-router.register('users', AdminUserViewSet, basename='user')  # SuperAdmin CRUD
-
+router.register(r'users', AdminUserViewSet, basename='admin-users')  # admin user management (GET/PATCH)
 urlpatterns = [
-    # Router orqali SuperAdmin /users/ endpoint
+    # Admin users CRUD
     path('', include(router.urls)),
 
-    # Oddiy user profile endpointlari
+    # User self endpoints
     path('me/', UserMeView.as_view(), name='user-me'),
-    path('update-profile/', UpdateProfileView.as_view(), name='update-profile'),
+    path('me/update/', UpdateProfileView.as_view(), name='user-update'),
 
-    # User activation
-    path('auth/users/activate/<uid>/<token>/', UserActivateView.as_view(), name='user-activate'),
+    # Activation
+    path(
+        'auth/activate/<uid>/<token>/',
+        UserActivateView.as_view(),
+        name='user-activate'
+    ),
 ]

@@ -17,8 +17,6 @@ class User(AbstractBaseUser, PermissionsMixin):
         validators=[phone_regex],
         max_length=13,
         unique=True,
-        blank=True,
-        null=True
     )
 
     avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
@@ -32,7 +30,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     objects = UserManager()
 
     USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = ["username"]
+    REQUIRED_FIELDS = ["username",'phone']
 
     def __str__(self):
         return self.email

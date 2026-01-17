@@ -18,6 +18,17 @@ class IsSuperAdmin(permissions.BasePermission):
         print(f"DEBUG: User: {request.user}")
         return request.user.is_authenticated and request.user.is_superuser
 
+class IsAdminOrStaff(permissions.BasePermission):
+    """
+    Faqat admin (is_superuser) yoki staff (is_staff / is_seller) foydalanuvchilar
+    CRUD qilishi mumkin. Oddiy userlar kira olmaydi.
+    """
+
+    def has_permission(self, request, view):
+        user = request.user
+        # Foydalanuvchi autentifikatsiya qilingan va staff yoki seller bo‘lsa
+        return bool(user and user.is_authenticated and (user.is_staff or user.is_seller or user.is_superuser))
+
 class IsCategoryManager(permissions.BasePermission):
     """Foydalanuvchi Category Manager bo‘lishi kerak"""
     def has_permission(self, request, view):
