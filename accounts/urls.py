@@ -5,12 +5,11 @@ from .views import (
     AdminUserViewSet,
     UserMeView,
     UpdateProfileView,
-    UserActivateView,
-    CustomUserViewSet
+    UserActivateView
 )
 
 router = DefaultRouter()
-router.register(r'users', AdminUserViewSet, basename='admin-users')  # admin user management (GET/PATCH)
+router.register(r'admin/users', AdminUserViewSet, basename='admin-users')  # admin user management (GET/PATCH)
 urlpatterns = [
     # Admin users CRUD
     path('', include(router.urls)),

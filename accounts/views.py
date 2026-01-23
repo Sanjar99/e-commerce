@@ -35,24 +35,6 @@ class AdminUserViewSet(ModelViewSet):
     def partial_update(self, request, *args, **kwargs):
         return super().partial_update(request, *args, **kwargs)
 
-class CustomUserViewSet(UserViewSet):
-    parser_classes = (MultiPartParser, FormParser)
-
-    @swagger_auto_schema(
-        consumes=['multipart/form-data'],
-        manual_parameters=[
-            openapi.Parameter('email', openapi.IN_FORM, type=openapi.TYPE_STRING, required=True),
-            openapi.Parameter('username', openapi.IN_FORM, type=openapi.TYPE_STRING, required=True),
-            openapi.Parameter('phone', openapi.IN_FORM, type=openapi.TYPE_STRING, required=True),
-            openapi.Parameter('password', openapi.IN_FORM, type=openapi.TYPE_STRING, required=True),
-            openapi.Parameter('re_password', openapi.IN_FORM, type=openapi.TYPE_STRING, required=True),
-            openapi.Parameter('avatar', openapi.IN_FORM, type=openapi.TYPE_FILE, required=False),  # ✅ FILE chiqadi
-        ],
-    )
-    def create(self, request, *args, **kwargs):
-        return super().create(request, *args, **kwargs)
-
-
 # ------------------------------
 # User Me (Profile) View
 # ------------------------------
@@ -65,7 +47,6 @@ class UserMeView(APIView):
     def get(self, request):
         serializer = UserMeSerializer(request.user)
         return Response(serializer.data, status=status.HTTP_200_OK)
-
 
 # ------------------------------
 # Update Profile View

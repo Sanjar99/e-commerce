@@ -2,22 +2,24 @@ from pathlib import Path
 import os
 from dotenv import load_dotenv
 from datetime import timedelta
+
 # -------------------------
 # BASE DIR
 # -------------------------
 BASE_DIR = Path(__file__).resolve().parent.parent
+
 # -------------------------
 # Load .env
 # -------------------------
-
 load_dotenv(BASE_DIR / '.env')
 
 # -------------------------
 # SECURITY
 # -------------------------
-SECRET_KEY = os.getenv('SECRET_KEY')
+# SECRET_KEY fallback (dev uchun)
+SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-change-me')
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',')
+ALLOWED_HOSTS = [h for h in os.getenv('ALLOWED_HOSTS', '').split(',') if h]
 
 # -------------------------
 # APPLICATIONS
@@ -122,7 +124,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # INTERNATIONALIZATION
 # -------------------------
 LANGUAGE_CODE = 'en-us'
-TIME_ZONE = 'UTC'
+TIME_ZONE = os.getenv('TIME_ZONE', 'Asia/Tashkent')
 USE_I18N = True
 USE_TZ = True
 
@@ -148,10 +150,7 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticatedOrReadOnly',
     ],
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.TokenAuthentication',  # oxirida ochiraman
-        'rest_framework_simplejwt.authentication.JWTAuthentication', #jwt
-        # 'rest_framework.authentication.SessionAuthentication',
-        # 'rest_framework.authentication.BasicAuthentication',
+        'rest_framework_simplejwt.authentication.JWTAuthentication'
     ],
     'DEFAULT_FILTER_BACKENDS': [
         'django_filters.rest_framework.DjangoFilterBackend'
@@ -163,7 +162,6 @@ REST_FRAMEWORK = {
 # -------------------------
 # JWT
 # -------------------------
-
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
@@ -173,18 +171,7 @@ SIMPLE_JWT = {
 }
 # -------------------------
 # DJOSER
-# -------------------------
-DJOSER = {
-    'LOGIN_FIELD': 'email',
-    'USER_CREATE_PASSWORD_RETYPE': True,
-    'SEND_ACTIVATION_EMAIL': True,   # yoki test uchun False
-    "ACTIVATION_URL": "api/v1/auth/users/activate/{uid}/{token}/",
-    'SERIALIZERS': {
-        'user_create': 'accounts.serializers.UserCreateSerializer',
-        'user': 'accounts.serializers.UserSerializer',
-        'current_user': 'accounts.serializers.UserSerializer',
-    },
-}
+# ------------------------
 DJOSER = {
     'LOGIN_FIELD': 'email',
     'USER_CREATE_PASSWORD_RETYPE': True,
@@ -196,11 +183,6 @@ DJOSER = {
         'current_user': 'accounts.serializers.UserSerializer',
     },
 }
-
-# Email sozlamalar (console backend test uchun)
-EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
-DEFAULT_FROM_EMAIL = "noreply@127.0.0.1"
-
 
 # -------------------------
 # DRF-YASG (Swagger)
@@ -220,11 +202,18 @@ SWAGGER_SETTINGS = {
 # -------------------------
 # Email
 # -------------------------
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
+# EMAIL + DJOSER activation (dev/prod ajratish)
+if DEBUG:
+    EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+    DEFAULT_FROM_EMAIL = "noreply@localhost"
+    DJOSER['SEND_ACTIVATION_EMAIL'] = False
+else:
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST = 'smtp.gmail.com'
+    EMAIL_PORT = 587
+    EMAIL_USE_TLS = True
+    EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+    EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+    DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
-EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
-DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+

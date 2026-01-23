@@ -5,9 +5,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
-from accounts.views import UserActivateView, CustomUserViewSet
-
-from rest_framework.routers import DefaultRouter
+from accounts.views import UserActivateView
 
 schema_view = get_schema_view(
 	openapi.Info(
@@ -20,12 +18,9 @@ schema_view = get_schema_view(
 	),
    public=True,
 )
-auth_router = DefaultRouter()
-auth_router.register(r'users', CustomUserViewSet, basename='custom-auth-users')
+
 urlpatterns = [
     path('admin/', admin.site.urls),
-    # ✅ /api/v1/auth/users/ ni bizning CustomUserViewSet egallaydi (multipart -> avatar ishlaydi)
-    path('api/v1/auth/', include(auth_router.urls)),
     # Auth (faqat Djoser)
     path('api/v1/auth/', include('djoser.urls')),
     path('api/v1/auth/', include('djoser.urls.jwt')),

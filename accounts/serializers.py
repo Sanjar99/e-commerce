@@ -21,10 +21,9 @@ class UserSerializer(BaseUserSerializer):
 class AdminUserUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('username','phone','is_active','is_staff','is_seller','avatar')
+        fields = ('username','avatar','is_active','is_staff','is_seller')
         extra_kwargs = {
             "username": {"required": False, "allow_blank": True},
-            "phone": {"required": False, "allow_blank": True},
             "avatar": {"required": False, "allow_null": True},
             "is_active": {"required": False},
             "is_staff": {"required": False},
@@ -81,16 +80,19 @@ class UserMeSerializer(serializers.ModelSerializer):
 class UpdateProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = (
-            'username',
-            'phone',
-            'avatar',
-        )
+        fields = ('username', 'phone', 'avatar')
+        extra_kwargs = {
+            "username": {"required": False, "allow_blank": True},
+            "phone": {"required": False, "allow_blank": True, "allow_null": True},
+            "avatar": {"required": False, "allow_null": True},
+        }
+
     def validate_username(self, value):
-        if not value:
-            raise serializers.ValidationError("Username is required.")
+        # Faqat yuborilganda tekshir, PATCH’da "yuborilmasa" bu funksiya chaqirilmaydi
+        if value == "":
+            raise serializers.ValidationError("Username cannot be blank.")
         return value
+
     def validate_phone(self, value):
-        if not value:
-            raise serializers.ValidationError("Phone number is required.")
+        # Phone yuborilmagan bo'lsa tegma, yuborilgan bo'lsa formatni model validator tekshiradi
         return value
