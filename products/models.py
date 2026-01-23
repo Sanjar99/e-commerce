@@ -1,165 +1,395 @@
 from django.db import models
 from django.utils.text import slugify
-from staff.models import StaffUser
+from django.core.exceptions import ValidationError
 
 
 # -------------------------
-#   Category
-#       Vazifasi: Productlarni turkumlarga ajratadi (category/subcategory).
-#       Nima uchun kerak: Filtrlash, navigatsiya va katalog tizimi uchun.
-#       Qiziq nuqta: parent orqali o‘z-o‘ziga bog‘lanadi → subcategory yaratish mumkin.
+# Base mixin
 # -------------------------
-
-class Category(models.Model):
-    name = models.CharField(max_length=255, unique=True)
-    slug = models.SlugField(max_length=255, unique=True, blank=True)
-    parent = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='subcategories')
-
-    class Meta:
-        verbose_name_plural = "Categories"
-
-    def save(self, *args, **kwargs):
-        if not self.slug:
-            self.slug = slugify(self.name)
-        super().save(*args, **kwargs)
-
-    def __str__(self):
-        return self.name
-
-# -------------------------
-#   Product
-#       Vazifasi: Marketplace’dagi asosiy product item.
-#       Nima uchun kerak: Har bir seller productni shu asosiy itemga bog‘laydi;
-#       umumiy ma’lumotlar (name, description, brand, main_image) shu yerda saqlanadi.
-# -------------------------
-
-class Product(models.Model):
-    seller = models.ForeignKey('seller.Seller', on_delete=models.CASCADE, related_name='products')
-    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='products_in_category')
-    name = models.CharField(max_length=255)
-    slug = models.SlugField(max_length=255, unique=True, blank=True)
-    description = models.TextField(blank=True, null=True)
-    price = models.DecimalField(max_digits=10, decimal_places=2)
-    main_image = models.ImageField(upload_to='product_main_images/')
-    brand = models.CharField(max_length=255, blank=True, null=True)
-    stock = models.PositiveIntegerField(default=0)
-    rating = models.FloatField(default=0)
-    is_active = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def save(self, *args, **kwargs):
-        if not self.slug:
-            self.slug = slugify(self.name)
-        super().save(*args, **kwargs)
-
-    def __str__(self):
-        return self.name
-
-# -------------------------
-#   ProductImage
-#       Vazifasi:Productga bir nechta rasm qo‘shish.
-#       Nima uchun kerak: Multiple image support; is_main orqali asosiy rasmni belgilash mumkin.
-# -------------------------
-
-class ProductImage(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='images')
-    image = models.ImageField(upload_to='product_images/')
-    is_main = models.BooleanField(default=False)
-
-    def __str__(self):
-        return f"{self.product.name} image"
-
-# -------------------------
-#   SellerProduct
-#       Vazifasi: Har sellerning o‘z narxi, stock va SKU bilan producti.
-#       Nima uchun kerak: Marketplace’da bir productni bir nechta seller sotishi mumkin; har seller uchun alohida narx va stock.
-# -------------------------
-class SellerProduct(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='seller_products')
-    seller = models.ForeignKey('seller.Seller', on_delete=models.CASCADE, related_name='products_seller')
-    price = models.DecimalField(max_digits=12, decimal_places=2)
-    old_price = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
-    stock = models.PositiveIntegerField(default=0)
-    sku = models.CharField(max_length=100, blank=True, null=True)
-    is_active = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"{self.product.name} - {self.seller.shop_name}"
-
-# -------------------------
-#   ProductVariant
-#       Vazifasi: Product variantlarini (Color, Size, Storage) saqlaydi.
-#       Nima uchun kerak: Masalan, XL, L yoki 256GB variantlarini boshqarish uchun.
-# -------------------------
-class ProductVariant(models.Model):
-    COLOR = "Color"
-    SIZE = "Size"
-    STORAGE = "Storage"
-
-    VARIANT_TYPE_CHOICES = [
-        (COLOR, 'Color'),
-        (SIZE, 'Size'),
-        (STORAGE, 'Storage')
-    ]
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='variants')
-    type = models.CharField(max_length=20, choices=VARIANT_TYPE_CHOICES)
-    value = models.CharField(max_length=50)
-
-    def __str__(self):
-        return f"{self.product.title} - {self.type}: {self.value}"
-
-# -------------------------
-#   SellerProductVariantPrice
-#       Vazifasi: Har seller variant narxi va stock’ini saqlaydi.
-#       Nima uchun kerak: Amazon kabi: bir sellerda XL variant qimmat, boshqasida arzon bo‘lishi mumkin.
-# -------------------------
-class SellerProductVariantPrice(models.Model):
-    seller_product = models.ForeignKey(SellerProduct, on_delete=models.CASCADE, related_name='variant_prices')
-    variant = models.ForeignKey(ProductVariant, on_delete=models.CASCADE)
-    price = models.DecimalField(max_digits=12, decimal_places=2)
-    stock = models.PositiveIntegerField(default=0)
-
-    def __str__(self):
-        return f"{self.seller_product} - {self.variant.value}"
-
-# -------------------------
-# ProductAttribute
-#       Vazifasi: Productning statik xususiyatlarini saqlaydi (RAM, Material, Size).
-#       Nima uchun kerak: Dynamic specs; filtrlar va product info uchun.
-# -------------------------
-class ProductAttribute(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='attributes')
-    key = models.CharField(max_length=100)   # e.g. "RAM", "Material"
-    value = models.CharField(max_length=255) # e.g. "8GB", "Cotton"
-# -------------------------
-# ProductModeration
-#       Vazifasi: Productni seller joylagandan keyin admin/ staff tomonidan tasdiqlash jarayoni.
-#       Nima uchun kerak: Marketplace’da content moderation; status orqali product qabul qilingan, rad qilingan yoki pending ekanini kuzatadi.
-# -------------------------
-class ProductModeration(models.Model):
-    PENDING = 'Pending'
-    APPROVED = 'Approved'
-    REJECTED = 'Rejected'
-
-    STATUS_CHOICES = [
-        (PENDING, 'Pending'),
-        (APPROVED, 'Approved'),
-        (REJECTED, 'Rejected'),
-    ]
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    seller = models.ForeignKey('seller.Seller', on_delete=models.CASCADE, related_name='products_moderation')
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=PENDING)
-    staff = models.ForeignKey(StaffUser, on_delete=models.SET_NULL, null=True, blank=True)
-    reason = models.TextField(blank=True, null=True)
+class TimeStampedModel(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        abstract = True
+
+
 # -------------------------
-# SearchKeyword Queue
-#       Vazifasi:Product uchun search keywords saqlaydi.
-#       Nima uchun kerak: SEO va search engine optimization, productni tez topish uchun.
+# Category (tree)
 # -------------------------
-class SearchKeyword(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='keywords')
+class Category(TimeStampedModel):
+    name = models.CharField(max_length=255, unique=True)
+    slug = models.SlugField(max_length=255, unique=True, blank=True)
+    parent = models.ForeignKey(
+        "self",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="children"
+    )
+    is_active = models.BooleanField(default=True)
+    ordering = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        verbose_name_plural = "Categories"
+        ordering = ("ordering", "name")
+        indexes = [
+            models.Index(fields=["slug"]),
+            models.Index(fields=["parent"]),
+        ]
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            base = slugify(self.name)
+            slug = base
+            i = 1
+            while Category.objects.filter(slug=slug).exclude(pk=self.pk).exists():
+                i += 1
+                slug = f"{base}-{i}"
+            self.slug = slug
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.name
+
+
+# -------------------------
+# Brand (optional but useful)
+# -------------------------
+class Brand(TimeStampedModel):
+    name = models.CharField(max_length=160, unique=True)
+    slug = models.SlugField(max_length=180, unique=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            base = slugify(self.name)
+            slug = base
+            i = 1
+            while Brand.objects.filter(slug=slug).exclude(pk=self.pk).exists():
+                i += 1
+                slug = f"{base}-{i}"
+            self.slug = slug
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.name
+
+
+# -------------------------
+# Product (catalog)
+# -------------------------
+class Product(TimeStampedModel):
+    class Status(models.TextChoices):
+        DRAFT = "draft", "Draft"
+        ACTIVE = "active", "Active"
+        ARCHIVED = "archived", "Archived"
+
+    category = models.ForeignKey(
+        Category,
+        on_delete=models.PROTECT,  # IMPORTANT: category delete productlarni o‘chirib yubormasin
+        related_name="products"
+    )
+    brand = models.ForeignKey(
+        Brand,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="products"
+    )
+
+    title = models.CharField(max_length=255)
+    slug = models.SlugField(max_length=255, unique=True, blank=True)
+    description = models.TextField(blank=True, null=True)
+
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.DRAFT)
+    rating_avg = models.DecimalField(max_digits=3, decimal_places=2, default=0)   # 0.00 - 5.00
+    rating_count = models.PositiveIntegerField(default=0)
+
+    # flexible specs for filter/search later
+    attributes = models.JSONField(default=dict, blank=True)  # {"material":"cotton","gender":"men"}
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["slug"]),
+            models.Index(fields=["status"]),
+            models.Index(fields=["category"]),
+            models.Index(fields=["brand"]),
+        ]
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            base = slugify(self.title)
+            slug = base
+            i = 1
+            while Product.objects.filter(slug=slug).exclude(pk=self.pk).exists():
+                i += 1
+                slug = f"{base}-{i}"
+            self.slug = slug
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.title
+
+
+# -------------------------
+# Product images (multiple + main)
+# -------------------------
+class ProductImage(TimeStampedModel):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="images")
+    image = models.ImageField(upload_to="product_images/")
+    alt_text = models.CharField(max_length=180, blank=True)
+    is_main = models.BooleanField(default=False)
+    ordering = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ("ordering", "-is_main")
+        indexes = [
+            models.Index(fields=["product", "is_main"]),
+        ]
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        # faqat bitta main bo‘lsin
+        if self.is_main:
+            ProductImage.objects.filter(product=self.product, is_main=True).exclude(pk=self.pk).update(is_main=False)
+
+    def __str__(self):
+        return f"Image({self.product_id})"
+
+
+# -------------------------
+# Marketplace Offer (Seller listing)
+# -------------------------
+class SellerProduct(TimeStampedModel):
+    """
+    Amazon'dagi offer/listing:
+    - bir Product'ni bir nechta seller sotishi mumkin
+    - narx/holat/sellerga tegishli data shu yerda
+    """
+    seller = models.ForeignKey("seller.Seller", on_delete=models.CASCADE, related_name="offers")
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="offers")
+
+    is_active = models.BooleanField(default=True)
+
+    # offer-level default price (variantda override bo'lishi ham mumkin)
+    price = models.DecimalField(max_digits=12, decimal_places=2)
+    old_price = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+
+    currency = models.CharField(max_length=6, default="USD")
+    seller_sku_prefix = models.CharField(max_length=40, blank=True, null=True)  # optional
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["seller", "product"], name="uniq_seller_product_offer")
+        ]
+        indexes = [
+            models.Index(fields=["seller"]),
+            models.Index(fields=["product"]),
+            models.Index(fields=["is_active"]),
+        ]
+
+    def __str__(self):
+        return f"{self.product.title} @ {getattr(self.seller, 'shop_name', self.seller_id)}"
+
+
+# -------------------------
+# Variant options (Color/Size/Storage...) per product
+# -------------------------
+class ProductOption(TimeStampedModel):
+    """
+    Option name: Color, Size, Storage, Material, etc.
+    Per-product options (Amazon listing pages show options per product).
+    """
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="options")
+    name = models.CharField(max_length=60)  # e.g. "Color"
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["product", "name"], name="uniq_product_option_name")
+        ]
+        indexes = [
+            models.Index(fields=["product"]),
+        ]
+
+    def __str__(self):
+        return f"{self.product_id}:{self.name}"
+
+
+class ProductOptionValue(TimeStampedModel):
+    option = models.ForeignKey(ProductOption, on_delete=models.CASCADE, related_name="values")
+    value = models.CharField(max_length=80)  # e.g. "Black"
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["option", "value"], name="uniq_option_value")
+        ]
+        indexes = [
+            models.Index(fields=["option"]),
+        ]
+
+    def __str__(self):
+        return f"{self.option.name}={self.value}"
+
+
+# -------------------------
+# SKU Variant (real sellable unit)
+# -------------------------
+class ProductVariant(TimeStampedModel):
+    """
+    Bitta variant = bitta SKU (Color+Size+Storage kombinatsiyasi)
+    """
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="variants")
+    sku = models.CharField(max_length=64, unique=True)
+
+    is_active = models.BooleanField(default=True)
+
+    # variant-level media or barcode can be added later
+    barcode = models.CharField(max_length=64, null=True, blank=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["product"]),
+            models.Index(fields=["sku"]),
+            models.Index(fields=["is_active"]),
+        ]
+
+    def __str__(self):
+        return self.sku
+
+
+class VariantSelection(models.Model):
+    """
+    Variant -> (Option, Value) mapping
+    Example:
+      Variant SKU123 has:
+        Color=Black
+        Size=L
+    """
+    variant = models.ForeignKey(ProductVariant, on_delete=models.CASCADE, related_name="selections")
+    option = models.ForeignKey(ProductOption, on_delete=models.CASCADE)
+    value = models.ForeignKey(ProductOptionValue, on_delete=models.CASCADE)
+
+    class Meta:
+        constraints = [
+            # bitta variantda bitta option faqat bir marta
+            models.UniqueConstraint(fields=["variant", "option"], name="uniq_variant_option"),
+        ]
+        indexes = [
+            models.Index(fields=["variant"]),
+            models.Index(fields=["option"]),
+            models.Index(fields=["value"]),
+        ]
+
+    def clean(self):
+        # value shu option ga tegishli bo‘lishi shart
+        if self.value.option_id != self.option_id:
+            raise ValidationError("Selected value does not belong to the given option.")
+
+        # option shu variant.product ga tegishli bo‘lishi shart
+        if self.option.product_id != self.variant.product_id:
+            raise ValidationError("Option does not belong to the variant's product.")
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.variant.sku}: {self.option.name}={self.value.value}"
+
+
+# -------------------------
+# Offer per SKU (seller price per variant) + inventory
+# -------------------------
+class SellerVariantOffer(TimeStampedModel):
+    """
+    Amazon’da: seller har bir SKU uchun narx/stock (ba'zan variant bo'yicha farq qiladi)
+    """
+    seller_product = models.ForeignKey(SellerProduct, on_delete=models.CASCADE, related_name="variant_offers")
+    variant = models.ForeignKey(ProductVariant, on_delete=models.CASCADE, related_name="seller_offers")
+
+    price = models.DecimalField(max_digits=12, decimal_places=2)
+    old_price = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["seller_product", "variant"], name="uniq_seller_offer_variant")
+        ]
+        indexes = [
+            models.Index(fields=["variant"]),
+            models.Index(fields=["is_active"]),
+        ]
+
+    def __str__(self):
+        return f"{self.variant.sku} offer ({self.seller_product_id})"
+
+
+class Inventory(TimeStampedModel):
+    """
+    Stock har doim SKU-level bo'lsin.
+    Marketplace’da sellerga bog‘lab qo‘yamiz (seller_offer -> inventory).
+    """
+    seller_variant_offer = models.OneToOneField(
+        SellerVariantOffer, on_delete=models.CASCADE, related_name="inventory"
+    )
+    quantity = models.IntegerField(default=0)
+    reserved = models.IntegerField(default=0)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["quantity"]),
+        ]
+
+    @property
+    def available(self):
+        return max(self.quantity - self.reserved, 0)
+
+    def __str__(self):
+        return f"Inv({self.seller_variant_offer_id})={self.quantity}"
+
+
+# -------------------------
+# Moderation (seller listing approval)
+# -------------------------
+class ProductModeration(TimeStampedModel):
+    PENDING = "pending"
+    APPROVED = "approved"
+    REJECTED = "rejected"
+
+    STATUS_CHOICES = [
+        (PENDING, "Pending"),
+        (APPROVED, "Approved"),
+        (REJECTED, "Rejected"),
+    ]
+
+    seller_product = models.OneToOneField(
+        SellerProduct,
+        on_delete=models.CASCADE,
+        related_name="moderation"
+    )
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=PENDING)
+
+    staff = models.ForeignKey("staff.StaffUser", on_delete=models.SET_NULL, null=True, blank=True)
+    reason = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return f"Moderation({self.seller_product_id})={self.status}"
+
+
+# -------------------------
+# Search keywords (optional)
+# -------------------------
+class SearchKeyword(TimeStampedModel):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="keywords")
     keyword = models.CharField(max_length=100)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["product", "keyword"], name="uniq_product_keyword")
+        ]
+        indexes = [
+            models.Index(fields=["keyword"]),
+        ]
+
+    def __str__(self):
+        return self.keyword
