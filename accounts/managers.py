@@ -1,24 +1,47 @@
-from django.db import models
-from django.contrib.auth.models import AbstractUser
-from django.core.validators import RegexValidator
-from .managers import UserManager  # mana shu file'ga qo'yasan
+from django.contrib.auth.models import BaseUserManager
 
-phone_regex = RegexValidator(
-    regex=r'^\+998\d{9}$',
-    message="Phone number must be in the format: '+998xxxxxxxxx'."
-)
 
-class User(AbstractUser):
-    email = models.EmailField(unique=True)
-    phone = models.CharField(validators=[phone_regex], max_length=13, unique=True, blank=True, null=True)
-    avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
+class UserManager(BaseUserManager):
+    use_in_migrations = True
 
-    is_seller = models.BooleanField(default=False)
+    def create_user(self, email, password=None, **extra_fields):
+        """
+        Oddiy user yaratish.
+        Email majburiy.
+        Default: inactive (activation orqali yoqiladi).
+        """
+        if not email:
+            raise ValueError("Email is required")
+        if not password:
+            raise ValueError("Password is required")
 
-    # ✅ email bilan login
-    USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = ["username"]  # createsuperuser uchun
-    objects = UserManager()
+        email = self.normalize_email(email)
 
-    def __str__(self):
-        return self.email
+        extra_fields.setdefault("is_active", False)
+        extra_fields.setdefault("is_staff", False)
+        extra_fields.setdefault("is_superuser", False)
+
+        user = self.model(email=email, **extra_fields)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+    def create_superuser(self, email, password=None, **extra_fields):
+        """
+        Superuser yaratish.
+        """
+        if not email:
+            raise ValueError("Superuser must have an email")
+        if not password:
+            raise ValueError("Superuser must have a password")
+
+        extra_fields.setdefault("is_staff", True)
+        extra_fields.setdefault("is_superuser", True)
+        extra_fields.setdefault("is_active", True)
+
+        if extra_fields.get("is_staff") is not True:
+            raise ValueError("Superuser must have is_staff=True")
+        if extra_fields.get("is_superuser") is not True:
+            raise ValueError("Superuser must have is_superuser=True")
+
+        return self.create_user(email, password, **extra_fields)

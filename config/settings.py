@@ -43,7 +43,6 @@ INSTALLED_APPS = [
     'analytics',
     'cart',
     'coupon',
-    'logs',
     'notifications',
     'orders',
     'payments',
